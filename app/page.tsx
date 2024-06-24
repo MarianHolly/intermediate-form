@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useForm } from "react-hook-form";
 import { useToast } from "@/components/ui/use-toast";
@@ -15,10 +15,24 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-import { useZustand } from "./store";
-import { formSchema } from "./schema";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useZustand } from "./store";
+import { Textarea } from "@/components/ui/textarea";
+
+export const formSchema = z.object({
+  username: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
+  }),
+  bio: z
+    .string()
+    .min(10, {
+      message: "Bio must be at least 10 characters.",
+    })
+    .max(160, {
+      message: "Bio must not be longer than 30 characters.",
+    }),
+});
 
 export default function Home() {
   const { toast } = useToast();
@@ -26,26 +40,27 @@ export default function Home() {
   // define a FORM
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { username: "" },
   });
 
   // ZUSTAND store
   const username = useZustand((state) => state.username);
   const updateUser = useZustand((state) => state.updateUser);
+  const bio = useZustand((state) => state.bio);
+  const updateBio = useZustand((state) => state.updateBio);
 
   // SUBMIT function
   function onSubmit(values: z.infer<typeof formSchema>) {
     updateUser(values.username);
+    updateBio(values.bio);
   }
 
   // toast data stored in zustand
   function onToast() {
     toast({
       title: `${username}`,
-      description: "This is your zustand store data.",
+      description: `${bio}`,
     });
   }
-
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-start my-12">
@@ -69,6 +84,28 @@ export default function Home() {
               </FormItem>
             )}
           />
+
+          <FormField
+            control={form.control}
+            name="bio"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bio</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Tell us a little bit about yourself"
+                    className="resize-none"
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  You can <span>@mention</span> other users and organizations.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <Button type="submit" className="m-2">
             Submit
           </Button>
